@@ -116,11 +116,11 @@ function App() {
         )}
       </div>
 
-      <h1 className="hlavni-nadpis">🎬 ClipStash CZ</h1>
+      <h1 className="hlavni-nadpis">Databáze hlášek</h1>
 
       {zobrazitPrihlaseni && !uzivatel && (
         <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '20px', textAlign: 'center' }}>
-          <h3>Vstup pro tvůrce</h3>
+          <h3>Přihlášení</h3>
           <form onSubmit={zkusitPrihlasit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px', margin: '0 auto' }}>
             <input type="text" placeholder="Uživatelské jméno" value={jmeno} onChange={(e) => setJmeno(e.target.value)} style={{ padding: '8px', borderRadius: '5px', border: 'none' }}/>
             <input type="password" placeholder="Heslo" value={heslo} onChange={(e) => setHeslo(e.target.value)} style={{ padding: '8px', borderRadius: '5px', border: 'none' }}/>
@@ -132,14 +132,12 @@ function App() {
 
       {uzivatel && <AdminForm />}
 
-      {/* Mřížka (třída z CSS) */}
       <div className="yt-mrizka">
         {databaze.map((hlaska) => (
           <div 
             key={hlaska.id} 
             onClick={() => setAktivniHlaska(hlaska)} 
             className="yt-dlazdice"
-            // TRIK: Předáme odkaz na soubor do CSS proměnné pro ambientní efekt
             style={{ '--ambient-img': `url(${hlaska.soubor})` }}
           >
             
@@ -150,7 +148,6 @@ function App() {
               </div>
             )}
 
-            {/* Náhled (třídy z CSS) */}
             <div className="nahled-container">
               {hlaska.typ === 'video' ? (
                 <video src={hlaska.soubor} preload="metadata" className="nahled-obsah" />
@@ -159,7 +156,6 @@ function App() {
               )}
             </div>
             
-            {/* Informace (třídy z CSS) */}
             <div className="info-sekce">
               <h3 className="video-nazev">{hlaska.nazev}</h3>
               <p className="video-cas">{ziskatRelativniCas(hlaska.casPridani)}</p>

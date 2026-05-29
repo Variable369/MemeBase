@@ -62,43 +62,49 @@ function AdminForm() {
   };
 
   return (
-    <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '40px', border: '2px dashed #444' }}>
-      <h2>Tajné nahrávací studio 🕵️‍♂️</h2>
-      <form onSubmit={odeslatFormular} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+    <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '30px' }}>
+      
+      {/* Nový nadpis */}
+      <h2>Upload hlášky</h2>
+      
+      <form onSubmit={nahratHlasku} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         
+        {/* Nový předvyplněný text (placeholder) */}
         <input 
           type="text" 
-          placeholder="Zadej název hlášky (např. Pelíšky: Rozkaz zněl jasně)" 
-          value={nazev}
-          onChange={(e) => setNazev(e.target.value)}
-          style={{ padding: '10px', borderRadius: '5px', border: 'none', fontSize: '16px' }}
+          placeholder="Zadej název hlášky (např. Mike Tyson - I broke my back)" 
+          value={nazev} 
+          onChange={(e) => setNazev(e.target.value)} 
+          style={{ padding: '10px', borderRadius: '5px', border: 'none' }}
         />
-
+        
         <input 
-          id="souborInput"
           type="file" 
-          accept="video/mp4,audio/mp3,audio/mpeg" 
-          onChange={(e) => setSoubor(e.target.files[0])}
-          style={{ padding: '10px', backgroundColor: '#333', color: '#fff', borderRadius: '5px' }}
+          onChange={(e) => setSoubor(e.target.files[0])} 
+          style={{ padding: '10px', background: '#333', color: 'white', borderRadius: '5px' }}
         />
+        
+        {/* Obalovací div pro vycentrování zmenšeného tlačítka */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+          <button 
+            type="submit" 
+            disabled={nahravaSe}
+            style={{ 
+              padding: '10px 20px', /* Zajišťuje úhlednou velikost kolem textu */
+              background: '#4CAF50', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '5px', 
+              cursor: nahravaSe ? 'not-allowed' : 'pointer', 
+              fontWeight: 'bold',
+              opacity: nahravaSe ? 0.7 : 1
+            }}
+          >
+            {/* Odstraněný emoji u názvu tlačítka */}
+            {nahravaSe ? 'Nahrávám...' : 'Nahrát hlášku na web'}
+          </button>
+        </div>
 
-        <button 
-          type="submit" 
-          disabled={nahravam}
-          style={{ 
-            padding: '12px', 
-            backgroundColor: nahravam ? '#555' : '#4CAF50', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '5px', 
-            fontWeight: 'bold', 
-            cursor: nahravam ? 'not-allowed' : 'pointer' 
-          }}
-        >
-          {nahravam ? 'Zpracovávám...' : '🚀 Nahrát hlášku na web'}
-        </button>
-
-        {zprava && <p style={{ fontWeight: 'bold', color: zprava.includes('❌') ? '#ff4d4d' : '#4dabf7' }}>{zprava}</p>}
       </form>
     </div>
   );
