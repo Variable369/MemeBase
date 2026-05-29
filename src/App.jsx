@@ -106,7 +106,7 @@ function App() {
         )}
       </div>
 
-      <h1 style={{ textAlign: 'center', marginBottom: '40px' }}>🎬 Naše tajná databáze memů</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: '40px' }}>Databáze hlášek</h1>
 
       {zobrazitPrihlaseni && !uzivatel && (
         <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '20px', textAlign: 'center' }}>
