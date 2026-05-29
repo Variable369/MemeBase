@@ -1,9 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-// Tvoje tajné klíče z Firebase (přepsané z tvé fotky)
 const firebaseConfig = {
-  apiKey: "AIzaSyC1pPkpOPQAYlft9SfPngTnbVCdAq22n9s",
+  apiKey: "AIzaSyC1pPkpOPQAYlft9SfPngTmbVCdAq22n9s",
   authDomain: "memebase369.firebaseapp.com",
   projectId: "memebase369",
   storageBucket: "memebase369.firebasestorage.app",
@@ -14,5 +14,6 @@ const firebaseConfig = {
 // Nastartování Firebase
 const app = initializeApp(firebaseConfig);
 
-// Otevření spojení do textové databáze (Firestore)
+// Otevření spojení
 export const db = getFirestore(app);
+export const auth = getAuth(app); 
