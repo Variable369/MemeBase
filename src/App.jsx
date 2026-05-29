@@ -1,52 +1,52 @@
-import { useState } from 'react'
-import './App.css'
-
-const databaze = [
-  { 
-    id: 1, 
-    nazev: 'Pelíšky: Rozkaz zněl jasně', 
-    typ: 'audio',
-    soubor: '/hlaska1.mp3', 
-    ikona: '🔊'
-  },
-  { 
-    id: 2, 
-    nazev: 'Okresní přebor: Předseda hodil po nás kouli!', 
-    typ: 'video', 
-    soubor: '/predseda_hodil_po_nas_kouli.mp4', 
-    ikona: '🎬' 
-  },
-  { 
-    id: 3, 
-    nazev: 'Zolik - Na shorte cupi',
-    typ: 'audio', 
-    soubor: '/nashortecupi.mp3', // Přesný název z public složky
-    ikona: '🔊' 
-  }
-]
+import { useState, useEffect } from 'react';
+import './App.css';
+import AdminForm from './AdminForm';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from './firebase'; // Naše spojení s Firebase
 
 function App() {
-  const [aktivniHlaska, setAktivniHlaska] = useState(null)
+  const [aktivniHlaska, setAktivniHlaska] = useState(null);
+  const [databaze, setDatabaze] = useState([]); // Tady teď bude prázdno, dokud nepřijdou data z cloudu
+
+  // Tento kód se spustí po načtení stránky a začne "poslouchat" databázi
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'hlasky'), (snapshot) => {
+      const stazeneHlasky = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Seřadíme hlášky podle času přidání (nejnovější nahoře)
+      stazeneHlasky.sort((a, b) => b.casPridani?.toMillis() - a.casPridani?.toMillis());
+      
+      setDatabaze(stazeneHlasky);
+    });
+
+    // Uklidíme posluchač, pokud by uživatel ze stránky odešel
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div>
-      <h1 style={{ textAlign: 'center', modernization: '40px' }}>Vyber hlášku</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: '40px' }}>🎬 Naše tajná databáze memů</h1>
 
-      {/* Vykreslení mřížky dlaždic */}
+      {/* Formulář pro nahrávání */}
+      <AdminForm />
+
+      {/* Vykreslení mřížky dlaždic z cloudu */}
       <div className="mrizka">
         {databaze.map((hlaska) => (
           <div key={hlaska.id} className="dlazdice" onClick={() => setAktivniHlaska(hlaska)}>
             
             <div className="nahled-box">
-              {/* ZMĚNA ZDE: Pokud je to video, vykreslíme mini-video jako automatický obrázek */}
               {hlaska.typ === 'video' ? (
                 <video 
                   src={hlaska.soubor} 
-                  preload="metadata" /* Říká prohlížeči: stáhni jen začátek pro náhled */
+                  preload="metadata" 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
-                hlaska.ikona /* Pro audio necháme přehlednou ikonku repráčku */
+                hlaska.ikona 
               )}
             </div>
 
@@ -62,7 +62,6 @@ function App() {
           <div className="modal-okno" onClick={(e) => e.stopPropagation()}>
             <h2>{aktivniHlaska.nazev}</h2>
             
-            {/* Přehrávače */}
             {aktivniHlaska.typ === 'video' ? (
               <video 
                 src={aktivniHlaska.soubor} 
@@ -85,7 +84,7 @@ function App() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
