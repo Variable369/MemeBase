@@ -67,7 +67,7 @@ function AdminForm() {
       {/* Nový nadpis */}
       <h2>Upload hlášky</h2>
       
-      <form onSubmit={nahratHlasku} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <form onSubmit={odeslatFormular} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         
         {/* Nový předvyplněný text (placeholder) */}
         <input 
