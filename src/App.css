@@ -198,3 +198,57 @@ body {
   cursor: pointer;
   font-weight: bold;
 }
+
+/* Navigační lišta pod nadpisem */
+.kategorie-nav {
+  display: flex;
+  gap: 12px;
+  padding: 10px 24px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Skryje scrollbar ve Firefoxu */
+  margin-bottom: 20px;
+  border-bottom: 1px solid #333;
+}
+.kategorie-nav::-webkit-scrollbar { display: none; } /* Skryje scrollbar v Chrome/Safari */
+
+.tab {
+  padding: 8px 16px;
+  background-color: #222;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.tab:hover { background-color: #333; }
+.tab.active {
+  background-color: #f1f1f1;
+  color: #000;
+}
+
+.btn-nova-slozka {
+  background: transparent;
+  color: #4CAF50;
+  border: 1px dashed #4CAF50;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Edit mód / Move efekt */
+.move-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(76, 175, 80, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  z-index: 5;
+  border-radius: 12px;
+  pointer-events: none;
+}

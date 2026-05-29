@@ -2,38 +2,28 @@ import { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from './firebase'; 
 
-function AdminForm() {
+function AdminForm({ slozky }) { // Přijímáme složky jako "props"
   const [nazev, setNazev] = useState('');
   const [soubor, setSoubor] = useState(null);
-  const [nahravam, setNahravam] = useState(false); // Používáme název "nahravam"
-  const [zprava, setZprava] = useState('');
+  const [vybranaSlozka, setVybranaSlozka] = useState('featured');
+  const [nahravam, setNahravam] = useState(false);
 
   const odeslatFormular = async (e) => {
     e.preventDefault(); 
-    if (!nazev || !soubor) {
-      setZprava('⚠️ Prosím, vyplň název a vyber soubor.');
-      return;
-    }
+    if (!nazev || !soubor) return alert('Vyplň vše!');
 
     setNahravam(true);
-    setZprava('⏳ Nahrávám do Cloudinary (to může chvilku trvat)...');
-
     try {
       const formData = new FormData();
       formData.append('file', soubor);
       formData.append('upload_preset', 'meme_nahrano'); 
 
-      const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dvxacipi2/auto/upload';
-      const response = await fetch(cloudinaryUrl, {
+      const response = await fetch('https://api.cloudinary.com/v1_1/dvxacipi2/auto/upload', {
         method: 'POST',
         body: formData,
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error.message || 'Chyba při nahrávání do cloudu');
-
-      setZprava('✅ Soubor nahrán! Zapisuji do databáze Firebase...');
-
       const typSouboru = soubor.type.startsWith('video') ? 'video' : 'audio';
       
       await addDoc(collection(db, 'hlasky'), {
@@ -41,20 +31,13 @@ function AdminForm() {
         soubor: data.secure_url, 
         typ: typSouboru,
         ikona: typSouboru === 'video' ? '🎬' : '🔊',
+        slozkaId: vybranaSlozka, // ULOŽENÍ SLOŽKY
         casPridani: new Date() 
       });
 
-      setZprava('🎉 HOTOVO! Hláška je úspěšně v databázi.');
-      setNazev(''); 
-      setSoubor(null);
-      // Pokud nemáš element s id 'souborInput', může to hodit drobnou chybu, ale kód poběží dál. 
-      // Pro jistotu přidávám kontrolu, aby to nepadalo.
-      const fileInput = document.getElementById('souborInput');
-      if (fileInput) fileInput.value = ''; 
-
+      setNazev(''); setSoubor(null);
     } catch (error) {
-      console.error(error);
-      setZprava('❌ Došlo k chybě: ' + error.message);
+      alert('Chyba!');
     } finally {
       setNahravam(false);
     }
@@ -62,52 +45,26 @@ function AdminForm() {
 
   return (
     <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '30px' }}>
-      
       <h2>Upload hlášky</h2>
-      
       <form onSubmit={odeslatFormular} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <input type="text" placeholder="Název hlášky..." value={nazev} onChange={(e) => setNazev(e.target.value)} style={{ padding: '10px', borderRadius: '5px' }} />
         
-        <input 
-          type="text" 
-          placeholder="Zadej název hlášky (např. Mike Tyson - I broke my back)" 
-          value={nazev} 
-          onChange={(e) => setNazev(e.target.value)} 
-          style={{ padding: '10px', borderRadius: '5px', border: 'none' }}
-        />
-        
-        <input 
-          id="souborInput" /* Přidáno ID pro správné vyčištění pole po nahrání */
-          type="file" 
-          onChange={(e) => setSoubor(e.target.files[0])} 
-          style={{ padding: '10px', background: '#333', color: 'white', borderRadius: '5px' }}
-        />
-        
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-          <button 
-            type="submit" 
-            disabled={nahravam} /* Zde změněno na nahravam */
-            style={{ 
-              padding: '10px 20px', 
-              background: '#4CAF50', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '5px', 
-              cursor: nahravam ? 'not-allowed' : 'pointer', 
-              fontWeight: 'bold',
-              opacity: nahravam ? 0.7 : 1
-            }}
-          >
-            {nahravam ? 'Nahrávám...' : 'Nahrát hlášku na web'}
-          </button>
-        </div>
+        {/* VÝBĚR SLOŽKY */}
+        <select 
+          value={vybranaSlozka} 
+          onChange={(e) => setVybranaSlozka(e.target.value)}
+          style={{ padding: '10px', borderRadius: '5px', background: '#333', color: 'white' }}
+        >
+          <option value="featured">Do Featured (Základní)</option>
+          {slozky.map(s => (
+            <option key={s.id} value={s.id}>{s.nazev}</option>
+          ))}
+        </select>
 
-        {/* Zobrazení stavové zprávy, ať víš, co se děje */}
-        {zprava && (
-          <p style={{ textAlign: 'center', marginTop: '10px', color: '#aaa', fontSize: '14px' }}>
-            {zprava}
-          </p>
-        )}
-
+        <input type="file" onChange={(e) => setSoubor(e.target.files[0])} style={{ padding: '10px', background: '#333', color: 'white' }} />
+        <button type="submit" disabled={nahravam} style={{ padding: '10px', background: '#4CAF50', color: 'white', cursor: 'pointer' }}>
+          {nahravam ? 'Nahrávám...' : 'Nahrát'}
+        </button>
       </form>
     </div>
   );
