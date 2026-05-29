@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from './firebase'; // Načtení spojení s databází
+import { db } from './firebase'; 
 
 function AdminForm() {
   const [nazev, setNazev] = useState('');
   const [soubor, setSoubor] = useState(null);
-  const [nahravam, setNahravam] = useState(false);
+  const [nahravam, setNahravam] = useState(false); // Používáme název "nahravam"
   const [zprava, setZprava] = useState('');
 
   const odeslatFormular = async (e) => {
-    e.preventDefault(); // Zabrání obnovení stránky
+    e.preventDefault(); 
     if (!nazev || !soubor) {
       setZprava('⚠️ Prosím, vyplň název a vyber soubor.');
       return;
@@ -19,13 +19,10 @@ function AdminForm() {
     setZprava('⏳ Nahrávám do Cloudinary (to může chvilku trvat)...');
 
     try {
-      // 1. PŘÍPRAVA PRO CLOUDINARY
       const formData = new FormData();
       formData.append('file', soubor);
-      formData.append('upload_preset', 'meme_nahrano'); // Tvoje Cloudinary propustka
+      formData.append('upload_preset', 'meme_nahrano'); 
 
-      // 2. ODESLÁNÍ SOUBORU
-      // Použijeme 'auto', aby Cloudinary samo poznalo, zda je to video nebo audio
       const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dvxacipi2/auto/upload';
       const response = await fetch(cloudinaryUrl, {
         method: 'POST',
@@ -37,21 +34,23 @@ function AdminForm() {
 
       setZprava('✅ Soubor nahrán! Zapisuji do databáze Firebase...');
 
-      // 3. ZÁPIS DO FIREBASE (včetně odkazu, který nám Cloudinary právě vrátilo)
       const typSouboru = soubor.type.startsWith('video') ? 'video' : 'audio';
       
       await addDoc(collection(db, 'hlasky'), {
         nazev: nazev,
-        soubor: data.secure_url, // Tady je ten vygenerovaný odkaz!
+        soubor: data.secure_url, 
         typ: typSouboru,
         ikona: typSouboru === 'video' ? '🎬' : '🔊',
-        casPridani: new Date() // Abychom mohli hlášky později řadit
+        casPridani: new Date() 
       });
 
       setZprava('🎉 HOTOVO! Hláška je úspěšně v databázi.');
-      setNazev(''); // Vyčištění formuláře
+      setNazev(''); 
       setSoubor(null);
-      document.getElementById('souborInput').value = ''; 
+      // Pokud nemáš element s id 'souborInput', může to hodit drobnou chybu, ale kód poběží dál. 
+      // Pro jistotu přidávám kontrolu, aby to nepadalo.
+      const fileInput = document.getElementById('souborInput');
+      if (fileInput) fileInput.value = ''; 
 
     } catch (error) {
       console.error(error);
@@ -64,12 +63,10 @@ function AdminForm() {
   return (
     <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '30px' }}>
       
-      {/* Nový nadpis */}
       <h2>Upload hlášky</h2>
       
       <form onSubmit={odeslatFormular} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         
-        {/* Nový předvyplněný text (placeholder) */}
         <input 
           type="text" 
           placeholder="Zadej název hlášky (např. Mike Tyson - I broke my back)" 
@@ -79,31 +76,37 @@ function AdminForm() {
         />
         
         <input 
+          id="souborInput" /* Přidáno ID pro správné vyčištění pole po nahrání */
           type="file" 
           onChange={(e) => setSoubor(e.target.files[0])} 
           style={{ padding: '10px', background: '#333', color: 'white', borderRadius: '5px' }}
         />
         
-        {/* Obalovací div pro vycentrování zmenšeného tlačítka */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
           <button 
             type="submit" 
-            disabled={nahravaSe}
+            disabled={nahravam} /* Zde změněno na nahravam */
             style={{ 
-              padding: '10px 20px', /* Zajišťuje úhlednou velikost kolem textu */
+              padding: '10px 20px', 
               background: '#4CAF50', 
               color: 'white', 
               border: 'none', 
               borderRadius: '5px', 
-              cursor: nahravaSe ? 'not-allowed' : 'pointer', 
+              cursor: nahravam ? 'not-allowed' : 'pointer', 
               fontWeight: 'bold',
-              opacity: nahravaSe ? 0.7 : 1
+              opacity: nahravam ? 0.7 : 1
             }}
           >
-            {/* Odstraněný emoji u názvu tlačítka */}
-            {nahravaSe ? 'Nahrávám...' : 'Nahrát hlášku na web'}
+            {nahravam ? 'Nahrávám...' : 'Nahrát hlášku na web'}
           </button>
         </div>
+
+        {/* Zobrazení stavové zprávy, ať víš, co se děje */}
+        {zprava && (
+          <p style={{ textAlign: 'center', marginTop: '10px', color: '#aaa', fontSize: '14px' }}>
+            {zprava}
+          </p>
+        )}
 
       </form>
     </div>
