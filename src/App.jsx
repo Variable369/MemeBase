@@ -5,28 +5,19 @@ import { collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/fire
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
 
-// Pomocná funkce pro výpočet času "před..."
 const ziskatRelativniCas = (timestamp) => {
   if (!timestamp) return 'Neznámý čas';
-  
-  // Firebase timestamp musíme nejprve převést na klasický JavaScriptový datum
   const casVidea = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   const rozdilSekund = Math.floor((new Date() - casVidea) / 1000);
-
   if (rozdilSekund < 60) return 'před chvílí';
-  
   const minuty = Math.floor(rozdilSekund / 60);
   if (minuty < 60) return minuty === 1 ? 'před 1 minutou' : `před ${minuty} minutami`;
-  
   const hodiny = Math.floor(minuty / 60);
   if (hodiny < 24) return hodiny === 1 ? 'před 1 hodinou' : `před ${hodiny} hodinami`;
-  
   const dny = Math.floor(hodiny / 24);
   if (dny < 30) return dny === 1 ? 'před 1 dnem' : `před ${dny} dny`;
-  
   const mesice = Math.floor(dny / 30);
   if (mesice < 12) return mesice === 1 ? 'před 1 měsícem' : `před ${mesice} měsíci`;
-  
   const roky = Math.floor(mesice / 12);
   return roky === 1 ? 'před 1 rokem' : `před ${roky} lety`;
 };
@@ -125,23 +116,15 @@ function App() {
         )}
       </div>
 
-      <h1 style={{ textAlign: 'center', marginBottom: '40px' }}>🎬 Naše tajná databáze memů</h1>
+      <h1 className="hlavni-nadpis">🎬 ClipStash CZ</h1>
 
       {zobrazitPrihlaseni && !uzivatel && (
         <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '20px', textAlign: 'center' }}>
           <h3>Vstup pro tvůrce</h3>
           <form onSubmit={zkusitPrihlasit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px', margin: '0 auto' }}>
-            <input 
-              type="text" placeholder="Uživatelské jméno" value={jmeno} onChange={(e) => setJmeno(e.target.value)} 
-              style={{ padding: '8px', borderRadius: '5px', border: 'none' }}
-            />
-            <input 
-              type="password" placeholder="Heslo" value={heslo} onChange={(e) => setHeslo(e.target.value)} 
-              style={{ padding: '8px', borderRadius: '5px', border: 'none' }}
-            />
-            <button type="submit" style={{ padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-              Přihlásit
-            </button>
+            <input type="text" placeholder="Uživatelské jméno" value={jmeno} onChange={(e) => setJmeno(e.target.value)} style={{ padding: '8px', borderRadius: '5px', border: 'none' }}/>
+            <input type="password" placeholder="Heslo" value={heslo} onChange={(e) => setHeslo(e.target.value)} style={{ padding: '8px', borderRadius: '5px', border: 'none' }}/>
+            <button type="submit" style={{ padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Přihlásit</button>
             {chyba && <p style={{ color: '#ff4d4d', marginTop: '10px' }}>{chyba}</p>}
           </form>
         </div>
@@ -149,39 +132,37 @@ function App() {
 
       {uzivatel && <AdminForm />}
 
-      {/* Mřížka s novým čistým designem */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', padding: '20px' }}>
+      {/* Mřížka (třída z CSS) */}
+      <div className="yt-mrizka">
         {databaze.map((hlaska) => (
           <div 
             key={hlaska.id} 
             onClick={() => setAktivniHlaska(hlaska)} 
-            style={{ position: 'relative', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '10px' }}
+            className="yt-dlazdice"
+            // TRIK: Předáme odkaz na soubor do CSS proměnné pro ambientní efekt
+            style={{ '--ambient-img': `url(${hlaska.soubor})` }}
           >
             
             {jeAdmin && (
-              <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '5px' }}>
-                <button onClick={(e) => upravitNazev(hlaska.id, hlaska.nazev, e)} style={{ background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: '5px', padding: '6px', cursor: 'pointer', fontSize: '14px' }}>✏️</button>
-                <button onClick={(e) => smazatHlasku(hlaska.id, e)} style={{ background: 'rgba(255, 0, 0, 0.8)', color: 'white', border: 'none', borderRadius: '5px', padding: '6px', cursor: 'pointer', fontSize: '14px' }}>🗑️</button>
+              <div className="admin-listy">
+                <button onClick={(e) => upravitNazev(hlaska.id, hlaska.nazev, e)} className="admin-btn" style={{ background: 'rgba(230, 180, 0, 0.7)' }} title="Upravit název">✏️</button>
+                <button onClick={(e) => smazatHlasku(hlaska.id, e)} className="admin-btn" style={{ background: 'rgba(255, 0, 0, 0.7)' }} title="Smazat hlášku">🗑️</button>
               </div>
             )}
 
-            {/* Náhled videa (YouTube styl) */}
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#111' }}>
+            {/* Náhled (třídy z CSS) */}
+            <div className="nahled-container">
               {hlaska.typ === 'video' ? (
-                <video src={hlaska.soubor} preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <video src={hlaska.soubor} preload="metadata" className="nahled-obsah" />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>{hlaska.ikona}</div>
+                <div className="ikona-placeholder">{hlaska.ikona}</div>
               )}
             </div>
             
-            {/* Informace pod videem */}
-            <div style={{ padding: '0 4px' }}>
-              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 'bold', color: '#f1f1f1', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                {hlaska.nazev}
-              </h3>
-              <p style={{ margin: '0', fontSize: '14px', color: '#aaaaaa' }}>
-                {ziskatRelativniCas(hlaska.casPridani)}
-              </p>
+            {/* Informace (třídy z CSS) */}
+            <div className="info-sekce">
+              <h3 className="video-nazev">{hlaska.nazev}</h3>
+              <p className="video-cas">{ziskatRelativniCas(hlaska.casPridani)}</p>
             </div>
             
           </div>
@@ -193,7 +174,7 @@ function App() {
           <div className="modal-okno" onClick={(e) => e.stopPropagation()}>
             <h2>{aktivniHlaska.nazev}</h2>
             {aktivniHlaska.typ === 'video' ? (
-              <video src={aktivniHlaska.soubor} controls autoPlay playsInline style={{ width: '100%', maxHeight: '60vh', borderRadius: '8px' }} />
+              <video src={aktivniHlaska.soubor} controls autoPlay playsInline className="modal-video" />
             ) : (
               <audio src={aktivniHlaska.soubor} controls autoPlay />
             )}

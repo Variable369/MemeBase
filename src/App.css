@@ -1,0 +1,200 @@
+/* src/App.css */
+
+/* Základní nastavení pro tmavý režim */
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Inter', sans-serif; /* Písmo podobné YouTube */
+  background-color: #0f0f0f; /* YouTube tmavé pozadí */
+  color: #f1f1f1;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hlavní nadpis */
+.hlavni-nadpis {
+  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  font-size: 2.4rem;
+  font-weight: bold;
+}
+
+/* Nová mřížka (YouTube styl) */
+.yt-mrizka {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  padding: 24px;
+}
+
+/* Kontejner pro celou dlaždici */
+.yt-dlazdice {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s ease;
+  padding: 8px;
+  border-radius: 16px;
+}
+
+/* Mírné zvětšení dlaždice na hover */
+.yt-dlazdice:hover {
+  transform: scale(1.02);
+}
+
+/* --- AMBIENTNÍ EFEKT (Magie začíná zde) --- */
+
+/* Vytvoříme skrytý prvek pod dlaždicí */
+.yt-dlazdice::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 50px; /* Končí kousek nad textem */
+  z-index: -1; /* Jde pod video */
+  
+  /* Vezmeme pozadí z inline stylu v JSX (samotný obrázek/video) */
+  background-image: var(--ambient-img);
+  background-size: cover;
+  background-position: center;
+  
+  /* Extrémní rozmazání a zvětšení */
+  filter: blur(40px) opacity(0);
+  transform: scale(1.1);
+  
+  /* Plynulý přechod */
+  transition: filter 0.3s ease, opacity 0.3s ease;
+  border-radius: 20px;
+}
+
+/* Zapnutí efektu na hover */
+.yt-dlazdice:hover::before {
+  filter: blur(50px) opacity(0.6); /* Zvýraznění a zviditelnění */
+}
+
+/* --- Konec ambientní magie --- */
+
+/* Kontejner pro náhled (poměr 16:9) */
+.nahled-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #1a1a1a;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Styl pro video/ikonu uvnitř náhledu */
+.nahled-obsah {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ikona-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  background: linear-gradient(135deg, #222, #333);
+}
+
+/* Informace pod videem */
+.info-sekce {
+  padding: 0 4px;
+}
+
+.video-nazev {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f1f1f1;
+  /* Oříznutí textu po 2 řádcích */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.video-cas {
+  margin: 0;
+  font-size: 14px;
+  color: #aaaaaa;
+}
+
+/* Admin tlačítka (nyní čistší) */
+.admin-listy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+  opacity: 0; /* Schovaná */
+  transition: opacity 0.2s ease;
+}
+
+/* Zobrazit tlačítka na hover nad dlaždicí */
+.yt-dlazdice:hover .admin-listy {
+  opacity: 1;
+}
+
+.admin-btn {
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  backdrop-filter: blur(5px); /* Skleněný efekt */
+}
+
+/* Modal/Přehrávač */
+.modal-pozadi {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.modal-okno {
+  background-color: #181818;
+  padding: 20px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 1000px;
+  border: 1px solid #333;
+}
+
+.modal-okno h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.modal-video {
+  width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.zavrit-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
