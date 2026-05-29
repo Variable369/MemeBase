@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import AdminForm from './AdminForm';
-// ZMĚNA 1: Přidali jsme funkce 'deleteDoc' a 'doc' pro mazání
-import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+// ZMĚNA 1: Přidali jsme 'updateDoc' pro možnost úpravy políček
+import { collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
 
@@ -58,12 +58,8 @@ function App() {
 
   const jeAdmin = uzivatel && uzivatel.email === 'admin@memebase.cz';
 
-  // ZMĚNA 2: Funkce pro smazání hlášky z databáze
   const smazatHlasku = async (id, event) => {
-    // Toto zabrání tomu, aby se po kliknutí na koš zároveň otevřelo okno s videem
-    event.stopPropagation(); 
-    
-    // Vyskočí potvrzovací okénko, aby ses nepřeklikl
+    event.stopPropagation(); // Zamezí otevření videa
     const potvrzeni = window.confirm("Opravdu chceš tuto hlášku smazat?");
     if (potvrzeni) {
       try {
@@ -71,6 +67,27 @@ function App() {
       } catch (error) {
         console.error("Chyba při mazání: ", error);
         alert("Nepodařilo se smazat hlášku.");
+      }
+    }
+  };
+
+  // ZMĚNA 2: Nová funkce pro úpravu názvu hlášky
+  const upravitNazev = async (id, stavajiciNazev, event) => {
+    event.stopPropagation(); // Zamezí otevření videa
+    
+    // Otevře vyskakovací okno s předvyplněným starým názvem
+    const novyNazev = window.prompt("Uprav název hlášky:", stavajiciNazev);
+    
+    // Zkontrolujeme, zda uživatel nedal Cancel nebo nenechal pole prázdné
+    if (novyNazev && novyNazev.trim() !== "") {
+      try {
+        // Aktualizujeme pouze políčko 'nazev' ve Firebase
+        await updateDoc(doc(db, 'hlasky', id), {
+          nazev: novyNazev.trim()
+        });
+      } catch (error) {
+        console.error("Chyba při úpravě názvu: ", error);
+        alert("Nepodařilo se změnit název hlášky.");
       }
     }
   };
@@ -115,23 +132,34 @@ function App() {
 
       <div className="mrizka">
         {databaze.map((hlaska) => (
-          // ZMĚNA 3: Přidáno position: 'relative' pro správné umístění koše
           <div key={hlaska.id} className="dlazdice" onClick={() => setAktivniHlaska(hlaska)} style={{ position: 'relative' }}>
             
-            {/* ZMĚNA 4: Vykreslení koše pouze pokud je uživatel Admin */}
+            {/* Ovládací tlačítka pro Admina */}
             {jeAdmin && (
-              <button 
-                onClick={(e) => smazatHlasku(hlaska.id, e)}
-                style={{
-                  position: 'absolute', top: '10px', right: '10px', zIndex: 10,
-                  background: 'rgba(255, 0, 0, 0.8)', color: 'white', border: 'none', 
-                  borderRadius: '5px', padding: '5px 10px', cursor: 'pointer',
-                  fontSize: '16px'
-                }}
-                title="Smazat hlášku"
-              >
-                🗑️
-              </button>
+              <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '5px' }}>
+                {/* ZMĚNA 3: Přidáno žluté tlačítko pro úpravu */}
+                <button 
+                  onClick={(e) => upravitNazev(hlaska.id, hlaska.nazev, e)}
+                  style={{
+                    background: 'rgba(230, 180, 0, 0.9)', color: 'white', border: 'none', 
+                    borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '14px'
+                  }}
+                  title="Upravit název"
+                >
+                  ✏️
+                </button>
+                
+                <button 
+                  onClick={(e) => smazatHlasku(hlaska.id, e)}
+                  style={{
+                    background: 'rgba(255, 0, 0, 0.8)', color: 'white', border: 'none', 
+                    borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '14px'
+                  }}
+                  title="Smazat hlášku"
+                >
+                  🗑️
+                </button>
+              </div>
             )}
 
             <div className="nahled-box">
