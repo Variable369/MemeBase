@@ -19,14 +19,12 @@ const ziskatRelativniCas = (timestamp) => {
 };
 
 function App() {
-  // 1. Stavy pro aplikaci a složky
   const [aktivniHlaska, setAktivniHlaska] = useState(null);
   const [databaze, setDatabaze] = useState([]);
   const [slozky, setSlozky] = useState([]);
   const [aktivniSlozkaId, setAktivniSlozkaId] = useState('featured');
   const [jeMoveMod, setJeMoveMod] = useState(false);
   
-  // 2. Stavy pro přihlášení (Vráceno zpět!)
   const [uzivatel, setUzivatel] = useState(null);
   const [zobrazitPrihlaseni, setZobrazitPrihlaseni] = useState(false);
   const [jmeno, setJmeno] = useState('');
@@ -38,6 +36,20 @@ function App() {
       const stazene = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       stazene.sort((a, b) => b.casPridani?.toMillis() - a.casPridani?.toMillis());
       setDatabaze(stazene);
+
+      // ZMĚNA: Po načtení dat zkontrolujeme, zda v URL není ID hlášky
+      setAktivniHlaska((aktualni) => {
+        // Zabráníme tomu, aby se okno znovu otevíralo, když uživatel listuje a někdo jiný nahraje hlášku
+        if (!aktualni) {
+          const urlParams = new URLSearchParams(window.location.search);
+          const urlClipId = urlParams.get('clip');
+          if (urlClipId) {
+            const hledanaHlaska = stazene.find(h => h.id === urlClipId);
+            return hledanaHlaska || null;
+          }
+        }
+        return aktualni;
+      });
     });
 
     const odhlasitSlozky = onSnapshot(collection(db, 'slozky'), (snapshot) => {
@@ -50,7 +62,20 @@ function App() {
     return () => { odhlasitHlasky(); odhlasitSlozky(); sledovatPrihlaseni(); };
   }, []);
 
-  // 3. Logika pro přihlášení (Vráceno zpět!)
+  // --- NOVÉ FUNKCE PRO OVLÁDÁNÍ MODALU A URL ---
+  const otevritModal = (hlaska) => {
+    setAktivniHlaska(hlaska);
+    // Potichu přidá ?clip=ID do adresního řádku
+    window.history.pushState({}, '', `?clip=${hlaska.id}`);
+  };
+
+  const zavritModal = () => {
+    setAktivniHlaska(null);
+    // Potichu vymaže parametr z URL (vrátí se na čistou adresu bez načítání stránky)
+    window.history.pushState({}, '', window.location.pathname);
+  };
+  // ---------------------------------------------
+
   const zkusitPrihlasit = async (e) => {
     e.preventDefault();
     try {
@@ -58,11 +83,8 @@ function App() {
       const tajnyEmail = `${upraveneJmeno}@memebase.cz`;
       await signInWithEmailAndPassword(auth, tajnyEmail, heslo);
       setZobrazitPrihlaseni(false);
-      setChyba('');
-      setJmeno('');
-      setHeslo('');
+      setChyba(''); setJmeno(''); setHeslo('');
     } catch (error) {
-      console.error(error);
       setChyba(`Chyba: ${error.code}`);
     }
   };
@@ -71,9 +93,7 @@ function App() {
 
   const vytvoritSlozku = async () => {
     const nazev = window.prompt("Zadej název nové složky:");
-    if (nazev) {
-      await addDoc(collection(db, 'slozky'), { nazev });
-    }
+    if (nazev) await addDoc(collection(db, 'slozky'), { nazev });
   };
 
   const smazatSlozku = async (id, e) => {
@@ -89,7 +109,6 @@ function App() {
     setJeMoveMod(false);
   };
 
-  // 4. Logika pro mazání a úpravu hlášek
   const smazatHlasku = async (id, event) => {
     event.stopPropagation();
     if (window.confirm("Opravdu chceš tuto hlášku smazat?")) {
@@ -127,7 +146,6 @@ function App() {
 
       <h1 className="hlavni-nadpis">Databáze hlášek</h1>
 
-      {/* Přihlašovací formulář (Vráceno zpět!) */}
       {zobrazitPrihlaseni && !uzivatel && (
         <div style={{ backgroundColor: '#222', padding: '20px', borderRadius: '10px', marginBottom: '20px', textAlign: 'center' }}>
           <h3>Přihlášení</h3>
@@ -140,51 +158,28 @@ function App() {
         </div>
       )}
 
-      {/* Navigace složek */}
       <div className="kategorie-nav">
-        <div 
-          className={`tab ${aktivniSlozkaId === 'featured' ? 'active' : ''}`}
-          onClick={() => setAktivniSlozkaId('featured')}
-        >
+        <div className={`tab ${aktivniSlozkaId === 'featured' ? 'active' : ''}`} onClick={() => setAktivniSlozkaId('featured')}>
           Featured
         </div>
-        
         {slozky.map(s => (
-          <div 
-            key={s.id} 
-            className={`tab ${aktivniSlozkaId === s.id ? 'active' : ''}`}
-            onClick={() => setAktivniSlozkaId(s.id)}
-            onContextMenu={(e) => {
-              if(jeAdmin) {
-                e.preventDefault();
-                smazatSlozku(s.id, e);
-              }
-            }}
-          >
+          <div key={s.id} className={`tab ${aktivniSlozkaId === s.id ? 'active' : ''}`} onClick={() => setAktivniSlozkaId(s.id)} onContextMenu={(e) => { if(jeAdmin) { e.preventDefault(); smazatSlozku(s.id, e); } }}>
             {s.nazev}
           </div>
         ))}
-
-        {jeAdmin && (
-          <button className="btn-nova-slozka" onClick={vytvoritSlozku}>+ Nová složka</button>
-        )}
+        {jeAdmin && <button className="btn-nova-slozka" onClick={vytvoritSlozku}>+ Nová složka</button>}
       </div>
 
       {jeAdmin && <AdminForm slozky={slozky} />}
 
-      {/* Move Mód */}
       {jeAdmin && (
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <button 
-            onClick={() => setJeMoveMod(!jeMoveMod)}
-            style={{ padding: '8px 16px', borderRadius: '10px', background: jeMoveMod ? '#4CAF50' : '#333', color: 'white', border: 'none', cursor: 'pointer' }}
-          >
+          <button onClick={() => setJeMoveMod(!jeMoveMod)} style={{ padding: '8px 16px', borderRadius: '10px', background: jeMoveMod ? '#4CAF50' : '#333', color: 'white', border: 'none', cursor: 'pointer' }}>
             {jeMoveMod ? '✅ Hotovo (Mód přesunu)' : '📂 Přesunout hlášky'}
           </button>
         </div>
       )}
 
-      {/* Mřížka hlášek */}
       <div className="yt-mrizka">
         {filtrovaneHlasky.map((hlaska) => (
           <div 
@@ -195,23 +190,19 @@ function App() {
               if (jeMoveMod) {
                 const kam = window.prompt("Kam přesunout? Napiš 'featured' nebo název složky přesně.");
                 if (!kam) return;
-                
-                if (kam.toLowerCase() === 'featured') {
-                  presunoutDoSlozky(hlaska.id, 'featured');
-                } else {
+                if (kam.toLowerCase() === 'featured') presunoutDoSlozky(hlaska.id, 'featured');
+                else {
                   const cil = slozky.find(s => s.nazev.toLowerCase() === kam.toLowerCase());
                   if (cil) presunoutDoSlozky(hlaska.id, cil.id);
                   else alert("Složka nenalezena! Napiš název přesně.");
                 }
               } else {
-                setAktivniHlaska(hlaska);
+                otevritModal(hlaska); // ZMĚNA: Používáme novou funkci pro otevření
               }
             }}
           >
-            {/* Overlay pro move mód */}
             {jeMoveMod && <div className="move-overlay">📦</div>}
             
-            {/* Tlačítka pro admina (Úprava / Koš) */}
             {jeAdmin && !jeMoveMod && (
               <div className="admin-listy">
                 <button onClick={(e) => upravitNazev(hlaska.id, hlaska.nazev, e)} className="admin-btn" style={{ background: 'rgba(230, 180, 0, 0.7)' }} title="Upravit název">✏️</button>
@@ -231,11 +222,14 @@ function App() {
       </div>
 
       {aktivniHlaska && (
-        <div className="modal-pozadi" onClick={() => setAktivniHlaska(null)}>
+        // ZMĚNA: Kliknutím na pozadí modal zavřeme naší novou funkcí
+        <div className="modal-pozadi" onClick={zavritModal}>
           <div className="modal-okno" onClick={(e) => e.stopPropagation()}>
             <h2>{aktivniHlaska.nazev}</h2>
             {aktivniHlaska.typ === 'video' ? <video src={aktivniHlaska.soubor} controls autoPlay playsInline className="modal-video" /> : <audio src={aktivniHlaska.soubor} controls autoPlay />}
-            <button className="zavrit-btn" onClick={() => setAktivniHlaska(null)}>Zavřít</button>
+            <br />
+            {/* ZMĚNA: Kliknutím na tlačítko modal zavřeme naší novou funkcí */}
+            <button className="zavrit-btn" onClick={zavritModal}>Zavřít</button>
           </div>
         </div>
       )}
