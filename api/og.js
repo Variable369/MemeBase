@@ -6,15 +6,11 @@ export default async function handler(req, res) {
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/hlasky/${clip}`;
     const response = await fetch(url);
     
-    // Pokud nám Firebase odmítne dát data, chceme přesně vědět proč!
-    if (!response.ok) {
-      const text = await response.text();
-      return res.status(200).send(`CHYBA FIREBASE: Server vrátil kód ${response.status} -> ${text}`);
-    }
+    if (!response.ok) throw new Error('Nenalezeno');
     
     const data = await response.json();
     
-    const nazev = data.fields?.nazev?.stringValue || "Neznámý název";
+    const nazev = data.fields?.nazev?.stringValue || "ClipStash Hláška";
     const soubor = data.fields?.soubor?.stringValue || "";
     const typ = data.fields?.typ?.stringValue || "video";
     
@@ -37,9 +33,7 @@ export default async function handler(req, res) {
       <script>window.location.href = "/?clip=${clip}&go=1";</script>
     </head>
     <body>
-      <h2>SKRIPT FUNGUJE PERFEKTNĚ! ✅</h2>
-      <p>Podařilo se mi najít hlášku: <b>${nazev}</b></p>
-      <p>Pokud vidíš tuto stránku, znamená to, že Vercel ignoruje náš soubor vercel.json.</p>
+      <p>Přesměrovávám na hlášku...</p>
     </body>
     </html>`;
 
@@ -47,7 +41,6 @@ export default async function handler(req, res) {
     res.status(200).send(html);
 
   } catch (error) {
-    // Vypíše chybu našeho vlastního kódu
-    res.status(200).send(`CHYBA KÓDU: ${error.message}`);
+    res.redirect('/');
   }
 }
