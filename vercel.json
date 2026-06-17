@@ -1,15 +1,18 @@
 {
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/(.*)",
+      "source": "/",
       "has": [
         { "type": "query", "key": "clip" }
       ],
       "missing": [
         { "type": "query", "key": "go" }
       ],
-      "destination": "/api/og"
-    },
+      "destination": "/api/og",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
