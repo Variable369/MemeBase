@@ -18,6 +18,13 @@ const ziskatRelativniCas = (timestamp) => {
   return `před ${dny} dny`;
 };
 
+// NOVÁ FUNKCE: Kouzlo Cloudinary - změní odkaz z videa na obrázek (náhled)
+const ziskatNahledVidea = (url) => {
+  if (!url) return '';
+  // Nahradí koncovku (.mp4, .webm atd.) za .jpg
+  return url.replace(/\.[^/.]+$/, ".jpg");
+};
+
 function App() {
   const [aktivniHlaska, setAktivniHlaska] = useState(null);
   const [databaze, setDatabaze] = useState([]);
@@ -37,9 +44,7 @@ function App() {
       stazene.sort((a, b) => b.casPridani?.toMillis() - a.casPridani?.toMillis());
       setDatabaze(stazene);
 
-      // ZMĚNA: Po načtení dat zkontrolujeme, zda v URL není ID hlášky
       setAktivniHlaska((aktualni) => {
-        // Zabráníme tomu, aby se okno znovu otevíralo, když uživatel listuje a někdo jiný nahraje hlášku
         if (!aktualni) {
           const urlParams = new URLSearchParams(window.location.search);
           const urlClipId = urlParams.get('clip');
@@ -62,19 +67,15 @@ function App() {
     return () => { odhlasitHlasky(); odhlasitSlozky(); sledovatPrihlaseni(); };
   }, []);
 
-  // --- NOVÉ FUNKCE PRO OVLÁDÁNÍ MODALU A URL ---
   const otevritModal = (hlaska) => {
     setAktivniHlaska(hlaska);
-    // Potichu přidá ?clip=ID do adresního řádku
     window.history.pushState({}, '', `?clip=${hlaska.id}`);
   };
 
   const zavritModal = () => {
     setAktivniHlaska(null);
-    // Potichu vymaže parametr z URL (vrátí se na čistou adresu bez načítání stránky)
     window.history.pushState({}, '', window.location.pathname);
   };
-  // ---------------------------------------------
 
   const zkusitPrihlasit = async (e) => {
     e.preventDefault();
@@ -185,7 +186,8 @@ function App() {
           <div 
             key={hlaska.id} 
             className="yt-dlazdice"
-            style={{ '--ambient-img': `url(${hlaska.soubor})` }}
+            // ZMĚNA: Ambientní efekt teď také používá lehký obrázek místo videa
+            style={{ '--ambient-img': `url(${hlaska.typ === 'video' ? ziskatNahledVidea(hlaska.soubor) : hlaska.soubor})` }}
             onClick={() => {
               if (jeMoveMod) {
                 const kam = window.prompt("Kam přesunout? Napiš 'featured' nebo název složky přesně.");
@@ -197,7 +199,7 @@ function App() {
                   else alert("Složka nenalezena! Napiš název přesně.");
                 }
               } else {
-                otevritModal(hlaska); // ZMĚNA: Používáme novou funkci pro otevření
+                otevritModal(hlaska);
               }
             }}
           >
@@ -211,8 +213,14 @@ function App() {
             )}
 
             <div className="nahled-container">
-              {hlaska.typ === 'video' ? <video src={hlaska.soubor} preload="metadata" className="nahled-obsah" /> : <div className="ikona-placeholder">{hlaska.ikona}</div>}
+              {/* ZMĚNA: Tady už není <video>, ale klasický <img> tag! */}
+              {hlaska.typ === 'video' ? (
+                <img src={ziskatNahledVidea(hlaska.soubor)} alt={hlaska.nazev} className="nahled-obsah" />
+              ) : (
+                <div className="ikona-placeholder">{hlaska.ikona}</div>
+              )}
             </div>
+            
             <div className="info-sekce">
               <h3 className="video-nazev">{hlaska.nazev}</h3>
               <p className="video-cas">{ziskatRelativniCas(hlaska.casPridani)}</p>
@@ -222,13 +230,12 @@ function App() {
       </div>
 
       {aktivniHlaska && (
-        // ZMĚNA: Kliknutím na pozadí modal zavřeme naší novou funkcí
         <div className="modal-pozadi" onClick={zavritModal}>
           <div className="modal-okno" onClick={(e) => e.stopPropagation()}>
             <h2>{aktivniHlaska.nazev}</h2>
+            {/* V modalu už se reálně pouští plnohodnotné video */}
             {aktivniHlaska.typ === 'video' ? <video src={aktivniHlaska.soubor} controls autoPlay playsInline className="modal-video" /> : <audio src={aktivniHlaska.soubor} controls autoPlay />}
             <br />
-            {/* ZMĚNA: Kliknutím na tlačítko modal zavřeme naší novou funkcí */}
             <button className="zavrit-btn" onClick={zavritModal}>Zavřít</button>
           </div>
         </div>
